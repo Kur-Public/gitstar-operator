@@ -15,6 +15,7 @@ import (
 
 	"gitstar-operator/pkg/apis"
 	"gitstar-operator/pkg/controller"
+	"gitstar-operator/pkg/gitStarWatcher"
 	"gitstar-operator/version"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -130,6 +131,8 @@ func main() {
 
 	// Add the Metrics Service
 	addMetrics(ctx, cfg)
+	log.Info("Starting the Watcher.")
+	gitStarWatcher.Run()
 
 	log.Info("Starting the Cmd.")
 

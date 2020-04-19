@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitstar-github-token
+data:
+  token: |
+    <input your 'GitHub Personal access tokens' in here>
