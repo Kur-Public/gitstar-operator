@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/clientcmd"
@@ -30,7 +31,7 @@ var (
 	log              = logf.Log.WithName("controller_gitstar")
 	gitStarNameSpace = ""
 	gitStarName      = ""
-	GitHubOAuthToken = ""
+	gitHubOAuthToken = ""
 	k8sClient        = newK8SClient()
 )
 
@@ -63,13 +64,13 @@ func main() {
 		reqLogger.Error(err, "get star number of repo failed! ")
 		gitStar.Status = customV1.GitStarStatus{
 			StarNumber:   -1,
-			UpdatedAt:    time.Now(),
+			UpdatedAt:    metav1.NewTime(time.Now()),
 			FailedReason: err.Error(),
 		}
 	} else {
 		gitStar.Status = customV1.GitStarStatus{
 			StarNumber:   starNumber,
-			UpdatedAt:    time.Now(),
+			UpdatedAt:    metav1.NewTime(time.Now()),
 			FailedReason: "",
 		}
 	}
@@ -91,9 +92,9 @@ func GetStarOfRepo(gitStar *customV1.GitStar) (int64, error) {
 	}
 
 	var c *github.Client
-	if GitHubOAuthToken != "" {
+	if gitHubOAuthToken != "" {
 		c = github.NewClient(oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
-			&oauth2.Token{AccessToken: GitHubOAuthToken},
+			&oauth2.Token{AccessToken: gitHubOAuthToken},
 		)))
 	} else {
 		c = github.NewClient(nil)
@@ -162,7 +163,7 @@ func InitEnv() error {
 	}
 
 	if data, ok := oAuthCM.Data[GitHubOAuthTokenCMFileName]; ok {
-		GitHubOAuthToken = data
+		gitHubOAuthToken = data
 	} else {
 		return nil
 	}
