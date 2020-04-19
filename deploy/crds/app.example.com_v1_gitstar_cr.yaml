@@ -1,0 +1,7 @@
+apiVersion: app.example.com/v1
+kind: GitStar
+metadata:
+  name: example-gitstar
+spec:
+  # Add fields here
+  size: 3
