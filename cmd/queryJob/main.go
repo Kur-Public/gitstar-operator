@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/clientcmd"
@@ -17,8 +18,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+
 	"gitstar-operator/pkg/apis"
-	appv1 "gitstar-operator/pkg/apis/app/v1"
+	appV1 "gitstar-operator/pkg/apis/app/v1"
 	customV1 "gitstar-operator/pkg/apis/app/v1"
 	"gitstar-operator/pkg/controller/gitstar"
 )
@@ -27,18 +30,25 @@ var (
 	log              = logf.Log.WithName("controller_gitstar")
 	gitStarNameSpace = ""
 	gitStarName      = ""
+	GitHubOAuthToken = ""
 	k8sClient        = newK8SClient()
 )
 
+const (
+	GitHubOAuthTokenCMName      = "gitstar-github-token"
+	GitHubOAuthTokenCMNameSpace = "default"
+	GitHubOAuthTokenCMFileName  = "token"
+)
+
 func main() {
-	err := GetRepoNameFromEnv()
+	err := InitEnv()
 	if err != nil {
 		log.Error(err, "")
 		return
 	}
 	reqLogger := log.WithValues("Request.Namespace", gitStarNameSpace, "Request.Name", gitStarName)
 
-	gitStar := &appv1.GitStar{}
+	gitStar := &appV1.GitStar{}
 	err = k8sClient.Get(context.TODO(), types.NamespacedName{
 		Namespace: gitStarNameSpace,
 		Name:      gitStarName,
@@ -80,9 +90,14 @@ func GetStarOfRepo(gitStar *customV1.GitStar) (int64, error) {
 		return -1, errors.New("The repo name is invalid, please check! ")
 	}
 
-	c := github.NewClient(oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: "8073e8e8dfa9dd998b35840ddfd8f12e9bf60a7b"},
-	)))
+	var c *github.Client
+	if GitHubOAuthToken != "" {
+		c = github.NewClient(oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: GitHubOAuthToken},
+		)))
+	} else {
+		c = github.NewClient(nil)
+	}
 
 	get, _, err := c.Repositories.Get(context.TODO(), split[0], split[1])
 	if err != nil {
@@ -119,17 +134,38 @@ func newK8SClient() client.Client {
 	return c
 }
 
-func GetRepoNameFromEnv() error {
+func InitEnv() error {
+	// init gitStar target name
 	name := os.Getenv(gitstar.ENVGitStarName)
 	if name == "" {
 		return errors.New("get gitStarName was empty form env")
 	}
 	gitStarName = name
 
+	// init gitStar target namespace
 	namespace := os.Getenv(gitstar.ENVGitStarNameSpace)
 	if name == "" {
 		return errors.New("get gitStarNameSpace was empty form env")
 	}
 	gitStarNameSpace = namespace
+
+	// init github oauth token
+	oAuthCM := &v1.ConfigMap{}
+	err := k8sClient.Get(context.TODO(), types.NamespacedName{
+		Namespace: GitHubOAuthTokenCMNameSpace,
+		Name:      GitHubOAuthTokenCMName,
+	}, oAuthCM)
+	if err != nil && k8serrors.IsNotFound(err) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	if data, ok := oAuthCM.Data[GitHubOAuthTokenCMFileName]; ok {
+		GitHubOAuthToken = data
+	} else {
+		return nil
+	}
+
 	return nil
 }

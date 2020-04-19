@@ -121,10 +121,12 @@ func (r *ReconcileGitStar) Reconcile(request reconcile.Request) (reconcile.Resul
 	return reconcile.Result{}, nil
 }
 
+// generateCronJobName
 func generateCronJobName(cr *appv1.GitStar) string {
 	return fmt.Sprintf("%s-gitstar", cr.Name)
 }
 
+// newCronJobForCR
 func newCronJobForCR(cr *appv1.GitStar) *batchv1.CronJob {
 	labels := map[string]string{
 		"app": cr.Name,
