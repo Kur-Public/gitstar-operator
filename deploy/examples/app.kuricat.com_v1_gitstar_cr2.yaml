@@ -1,0 +1,6 @@
+apiVersion: app.kuricat.com/v1
+kind: GitStar
+metadata:
+  name: "kubernetes"
+spec:
+  repoName: "kubernetes/kubernetes"

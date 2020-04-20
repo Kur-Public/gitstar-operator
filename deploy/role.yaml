@@ -39,6 +39,18 @@ rules:
   - update
   - watch
 - apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - monitoring.coreos.com
   resources:
   - servicemonitors
@@ -67,9 +79,22 @@ rules:
   verbs:
   - get
 - apiGroups:
+  - app.kuricat.com
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - app.example.com
   resources:
   - '*'
+  - gitstars
   verbs:
   - create
   - delete

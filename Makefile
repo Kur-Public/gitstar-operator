@@ -1,5 +1,6 @@
 buildoperator:
-
+	./build-operator.sh
 buildqueryjob:
+	./build-queryjob.sh
 
-buildall:
+buildall: buildqueryjob buildoperator

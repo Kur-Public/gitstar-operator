@@ -2,15 +2,15 @@ package gitstar
 
 import (
 	"context"
-	"fmt"
 
-	"k8s.io/api/batch/v1"
 	batchv1 "k8s.io/api/batch/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	appv1 "gitstar-operator/pkg/apis/app/v1"
+	"gitstar-operator/pkg/gitOperation"
+	"gitstar-operator/pkg/resource"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -21,11 +21,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-)
-
-const (
-	ENVGitStarName      = "git_star_name"
-	ENVGitStarNameSpace = "git_star_name_space"
 )
 
 var log = logf.Log.WithName("controller_gitstar")
@@ -86,6 +81,15 @@ func (r *ReconcileGitStar) Reconcile(request reconcile.Request) (reconcile.Resul
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// gitStar was delete
+			err := resource.DeleteCronJob(&appv1.GitStar{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: request.Namespace,
+					Name:      request.Name,
+				},
+			}, r.client)
+			if err != nil && !errors.IsNotFound(err) {
+				reqLogger.Error(err, "delete CronJob failed!")
+			}
 
 			return reconcile.Result{}, nil
 		}
@@ -93,14 +97,14 @@ func (r *ReconcileGitStar) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
-	cronJob := newCronJobForCR(instance)
+	cronJob := resource.NewCronJobForCR(instance)
 	// Set GitStar instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, cronJob, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	found := &batchv1.CronJob{}
-	err = r.client.Get(context.TODO(), request.NamespacedName, found)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: cronJob.Name, Namespace: cronJob.Namespace}, found)
 
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new CronJob", "CronJob.Namespace", cronJob.Namespace, "CronJob.Name", cronJob.Name)
@@ -109,6 +113,9 @@ func (r *ReconcileGitStar) Reconcile(request reconcile.Request) (reconcile.Resul
 			reqLogger.Error(err, "create CronJob of GetStar failed!")
 			return reconcile.Result{}, nil
 		}
+		reqLogger.Info("create CronJob of GetStar success!")
+		gitOperation.Run(instance.Namespace, instance.Name)
+
 		return reconcile.Result{}, nil
 	} else if err != nil {
 		// Error reading the object - requeue the request.
@@ -119,56 +126,4 @@ func (r *ReconcileGitStar) Reconcile(request reconcile.Request) (reconcile.Resul
 	// Pod already exists - don't requeue
 	reqLogger.Info("Skip reconcile: CronJob already exists", "CronJob.Namespace", found.Namespace, "CronJob.Name", found.Name)
 	return reconcile.Result{}, nil
-}
-
-// generateCronJobName
-func generateCronJobName(cr *appv1.GitStar) string {
-	return fmt.Sprintf("%s-gitstar", cr.Name)
-}
-
-// newCronJobForCR
-func newCronJobForCR(cr *appv1.GitStar) *batchv1.CronJob {
-	labels := map[string]string{
-		"app": cr.Name,
-	}
-	historyLimit := int32(20)
-
-	return &batchv1.CronJob{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      generateCronJobName(cr),
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: batchv1.CronJobSpec{
-			Schedule: "12 * * * *", // every 1 hour
-			JobTemplate: batchv1.JobTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{},
-				Spec: v1.JobSpec{
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name:  cr.Name + "-gitstarjob",
-									Image: "",
-									Env: []corev1.EnvVar{
-										{
-											Name:  ENVGitStarName,
-											Value: cr.Spec.RepoName,
-										},
-										{
-											Name:  ENVGitStarNameSpace,
-											Value: cr.Namespace,
-										},
-									},
-								},
-							},
-							RestartPolicy: corev1.RestartPolicyNever,
-						},
-					},
-				},
-			},
-			SuccessfulJobsHistoryLimit: &historyLimit,
-			FailedJobsHistoryLimit:     &historyLimit,
-		},
-	}
 }

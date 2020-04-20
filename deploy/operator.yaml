@@ -16,9 +16,9 @@ spec:
       containers:
         - name: gitstar-operator
           # Replace this with the built image name
-          image: REPLACE_IMAGE
+          image: kurisux/gitstar-operator:latest
           command:
-          - gitstar-operator
+            - gitstar-operator
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE

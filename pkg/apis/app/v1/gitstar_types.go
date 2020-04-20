@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"time"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -14,7 +12,7 @@ type GitStarSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
-	RepoName string `json:"repo_name"`
+	RepoName string `json:"repoName"`
 }
 
 // GitStarStatus defines the observed state of GitStar
@@ -22,9 +20,9 @@ type GitStarStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
-	StarNumber   int64     `json:"star_number"`
-	UpdatedAt    time.Time `json:"updated_at"`
-	FailedReason string    `json:"failed_reason"`
+	StarNumber   int64       `json:"starNumber"`
+	UpdatedAt    metav1.Time `json:"updateAt"`
+	FailedReason string      `json:"failedReason"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

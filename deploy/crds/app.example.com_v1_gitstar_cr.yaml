@@ -1,7 +1,0 @@
-apiVersion: app.example.com/v1
-kind: GitStar
-metadata:
-  name: "kuri-su-kblog"
-spec:
-  # Add fields here
-  repo_name: "kuri-su/kblog"

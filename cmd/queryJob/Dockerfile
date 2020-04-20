@@ -1,26 +1,24 @@
 # step 0
 FROM kurisux/golang-base-compile-container:latest
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
-
 RUN echo "export GOPROXY=https://goproxy.cn" >> /etc/profile
 
 # install
-RUN  source /etc/profile \
-    && git clone git@github.com:Kurisu-public/gitstar-operator.git \
-    && cd cmd/queryJob \
+RUN source /etc/profile \
+    && git clone https://github.com/Kurisu-public/gitstar-operator.git \
+    && cd ./gitstar-operator/cmd/queryJob \
     && go build -o target \
-    && mkdir -p /root/go/bin \
-    && cp target /root/go/bin/target
+    && mkdir -p /usr/local/bin \
+    && cp target /usr/local/bin/target
 
 # compression && packing
-RUN strip --strip-unneeded target \
-    && upx target \
-    && chmod a+x ./target \
-    && cp target /usr/local/bin
+RUN strip --strip-unneeded /usr/local/bin/target \
+    && upx /usr/local/bin/target \
+    && chmod a+x /usr/local/bin/target
 
 # step 1
-
 FROM alpine:latest
 
-COPY --from=0 /usr/local/bin/supergroup.mixin.one /usr/local/bin/
+COPY --from=0 /usr/local/bin/target /usr/local/bin/
+
+CMD ["target"]

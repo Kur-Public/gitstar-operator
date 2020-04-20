@@ -1,0 +1,6 @@
+apiVersion: app.kuricat.com/v1
+kind: GitStar
+metadata:
+  name: "kuri-su-kblog"
+spec:
+  repoName: "kuri-su/kblog"
