@@ -40,7 +40,7 @@ $ kubectl apply -f deploy/github_token.yaml
 
 ```shell
 $ kubectl apply -f deploy/examples
-$ watch kubectl get gstar -A
+$ watch kubectl get gitstars -A
 # enjoy :)
 ```
 
