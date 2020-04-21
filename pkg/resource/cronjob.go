@@ -20,7 +20,7 @@ const (
 )
 
 var (
-	CronJobHistoryLimit int32 = 5
+	CronJobHistoryLimit int32 = 3
 
 	log = logf.Log.WithName("controller_gitstar")
 )
@@ -38,8 +38,7 @@ func NewCronJobForCR(cr *appv1.GitStar) *batchv1.CronJob {
 			Labels:    labels,
 		},
 		Spec: batchv1.CronJobSpec{
-			// TODO change
-			Schedule: "* * * * *", // every 1 hour
+			Schedule: "10 * * * *", // every 1 hour
 			JobTemplate: batchv1.JobTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{},
 				Spec: v1.JobSpec{
