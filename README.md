@@ -1,5 +1,7 @@
 # GitStar Operator
 
+This's a simple dome of Kubernete Operator, you can submit some repo name to this operator , the Operator will be check the star number of this repo name .
+
 [![asciicast](https://asciinema.org/a/322231.svg)](https://asciinema.org/a/322231)
 
 ## Deploy
@@ -46,3 +48,9 @@ $ watch kubectl get gstar -A
 ## LICENSE
 
 Apache-2.0
+
+First, let ’s check the current situation
+
+
+
+begin
