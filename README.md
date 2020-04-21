@@ -1,17 +1,45 @@
 # GitStar Operator
 
-balabala // TODO
+[![asciicast](https://asciinema.org/a/322231.svg)](https://asciinema.org/a/322231)
 
-## Install
+## Deploy
 
+### deploy crd && role && operator
+
+```shell
+$ git clone git@github.com:Kurisu-public/gitstar-operator.git
+# deploy crd
+$ kubectl apply -f deploy/crds/
+# deploy role && role binding
+$ kubectl apply -f deploy/role.yaml 
+$ kubectl apply -f deploy/role_binding.yaml
+# deploy SA
+$ kubectl apply -f deploy/service_account.yaml
+# deploy operator
+$ kubectl apply -f deploy/operator.yaml
 ```
-// TODO
+
+### (Optional) Configure OAuth Token Of GitHub
+
+```shell
+$ vim deploy/github_token.yaml 
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: gitstar-github-token
+# data:
+#   token: |
+#     <input your 'GitHub Personal access tokens' in here>      <----- modify here
+#
+$ kubectl apply -f deploy/github_token.yaml 
 ```
 
 ## Use
 
-```
-// TODO
+```shell
+$ kubectl apply -f deploy/examples
+$ watch kubectl get gstar -A
+# enjoy :)
 ```
 
 
