@@ -48,9 +48,3 @@ $ watch kubectl get gitstars -A
 ## LICENSE
 
 Apache-2.0
-
-First, let ’s check the current situation
-
-
-
-begin
